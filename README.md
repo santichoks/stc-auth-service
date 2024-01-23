@@ -1,0 +1,1 @@
+# stc-auth-service
