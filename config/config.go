@@ -9,30 +9,19 @@ import (
 )
 
 type Config struct {
-	AllowOrigins   string
-	App            App
-	MongoUri       string
-	RedisUri       string
-	RedisPassword  string
-	GrpcUri        string
-	KafkaUri       string
-	KafkaApiKey    string
-	KafkaSecretKey string
-	Jwt            Jwt
-}
-
-type App struct {
-	Name  string
-	Url   string
-	Stage string
+	AllowOrigins  string
+	MongoUri      string
+	RedisUri      string
+	RedisPassword string
+	KafkaUri      string
+	Jwt           Jwt
 }
 
 type Jwt struct {
-	AccessSecretKey  string
-	RefreshSecretKey string
-	ApiSecretKey     string
-	AccessDuration   int64
-	RefreshDuration  int64
+	AccessTokenSecret    string
+	AccessTokenDuration  int64
+	RefreshTokenSecret   string
+	RefreshTokenDuration int64
 }
 
 func GetConfig() Config {
@@ -41,33 +30,24 @@ func GetConfig() Config {
 	}
 
 	return Config{
-		AllowOrigins: os.Getenv("ACCESS_ORIGINS"),
-		App: App{
-			Name:  os.Getenv("APP_NAME"),
-			Url:   os.Getenv("APP_URL"),
-			Stage: os.Getenv("APP_STAGE"),
-		},
-		MongoUri:       os.Getenv("MONGO_URI"),
-		RedisUri:       os.Getenv("REDIS_URI"),
-		RedisPassword:  os.Getenv("REDIS_PASSWORD"),
-		GrpcUri:        os.Getenv("GRPC_URI"),
-		KafkaUri:       os.Getenv("KAFKA_URI"),
-		KafkaApiKey:    os.Getenv("KAFKA_API_KEY"),
-		KafkaSecretKey: os.Getenv("KAFKA_SECRET_KEY"),
+		AllowOrigins:  os.Getenv("ACCESS_ORIGINS"),
+		MongoUri:      os.Getenv("MONGO_URI"),
+		RedisUri:      os.Getenv("REDIS_URI"),
+		RedisPassword: os.Getenv("REDIS_PASSWORD"),
+		KafkaUri:      os.Getenv("KAFKA_URI"),
 		Jwt: Jwt{
-			AccessSecretKey:  os.Getenv("JWT_ACCESS_SECRET_KEY"),
-			RefreshSecretKey: os.Getenv("JWT_REFRESH_SECRET_KEY"),
-			ApiSecretKey:     os.Getenv("JWT_API_SECRET_KEY"),
-			AccessDuration: func() int64 {
-				res, err := strconv.ParseInt(os.Getenv("JWT_ACCESS_DURATION"), 10, 64)
+			AccessTokenSecret: os.Getenv("JWT_ACCESS_TOKEN_SECRET"),
+			AccessTokenDuration: func() int64 {
+				res, err := strconv.ParseInt(os.Getenv("JWT_ACCESS_TOKEN_DURATION"), 10, 64)
 				if err != nil {
 					log.Fatalf("Error loading JWT_ACCESS_DURATION : %s", err.Error())
 				}
 
 				return res
 			}(),
-			RefreshDuration: func() int64 {
-				res, err := strconv.ParseInt(os.Getenv("JWT_REFRESH_DURATION"), 10, 64)
+			RefreshTokenSecret: os.Getenv("JWT_REFRESH_TOKEN_SECRET"),
+			RefreshTokenDuration: func() int64 {
+				res, err := strconv.ParseInt(os.Getenv("JWT_REFRESH_TOKEN_DURATION"), 10, 64)
 				if err != nil {
 					log.Fatalf("Error loading JWT_REFRESH_DURATION : %s", err.Error())
 				}

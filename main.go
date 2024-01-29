@@ -18,7 +18,10 @@ import (
 )
 
 func main() {
+	// Initial Configs
 	cfg := config.GetConfig()
+
+	// MongoDB and Redis Connection
 	mongo := databases.NewMongoConnection(&cfg)
 	redis := databases.NewRedisConnection(&cfg)
 	defer mongo.Disconnect(context.Background())
@@ -27,17 +30,22 @@ func main() {
 	authMongoRepo := repositories.NewAuthMongoRepository(mongo)
 	authRedisRepo := repositories.NewAuthRedisRepository(redis)
 	authSrv := services.NewAuthService(authMongoRepo, authRedisRepo)
-	authCtrl := controllers.NewAuthController(authSrv)
+	authCtrl := controllers.NewAuthController(authSrv, &cfg)
 
+	// Initial Fiber Server
 	app := fiber.New()
+
+	// Initial CORS request
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     cfg.AllowOrigins,
 		AllowMethods:     strings.Join([]string{fiber.MethodGet, fiber.MethodPost, fiber.MethodPut, fiber.MethodPatch, fiber.MethodDelete}, ","),
 		AllowCredentials: true,
 	}))
 
+	// Initial Routes
 	router.AuthRoute(app, authCtrl)
 
+	// Graceful Shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	go func() {
