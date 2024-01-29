@@ -1,4 +1,4 @@
-package jwtAuth
+package jwt_package
 
 import (
 	"time"

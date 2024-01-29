@@ -1,12 +1,8 @@
 package services
 
 import (
-	"fmt"
-
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/santichoks/stc-auth-service/config"
 	"github.com/santichoks/stc-auth-service/models"
-	"github.com/santichoks/stc-auth-service/pkgs/jwtAuth"
 	"github.com/santichoks/stc-auth-service/repositories"
 )
 
@@ -27,21 +23,21 @@ func NewAuthService(mongoRepo repositories.AuthMongoRepository, redisRepo reposi
 }
 
 func (srv authService) SignUpSrv(req models.SignUpReq, cfg *config.Config) {
-	myClaims := jwtAuth.MyClaims{
-		UserId:    "",
-		Email:     "myemail@stc.com",
-		FirstName: "Santichok",
-		LastName:  "Sangarun",
-	}
+	// myClaims := jwtPackage.MyClaims{
+	// 	UserId:    "",
+	// 	Email:     "myemail@stc.com",
+	// 	FirstName: "Santichok",
+	// 	LastName:  "Sangarun",
+	// }
 
-	tokenString := jwtAuth.InitAccessToken(cfg.Jwt.AccessTokenSecret, cfg.Jwt.AccessTokenDuration, &myClaims).SignToken()
-	fmt.Println(tokenString)
+	// tokenString := jwtPackage.InitAccessToken(cfg.Jwt.AccessTokenSecret, cfg.Jwt.AccessTokenDuration, &myClaims).SignToken()
+	// fmt.Println(tokenString)
 
-	token, _ := jwt.ParseWithClaims(tokenString, &jwtAuth.ClaimsWithOriginal{}, func(t *jwt.Token) (interface{}, error) {
-		return []byte(cfg.Jwt.AccessTokenSecret), nil
-	})
+	// token, _ := jwt.ParseWithClaims(tokenString, &jwtPackage.ClaimsWithOriginal{}, func(t *jwt.Token) (interface{}, error) {
+	// 	return []byte(cfg.Jwt.AccessTokenSecret), nil
+	// })
 
-	if v, ok := token.Claims.(*jwtAuth.ClaimsWithOriginal); ok {
-		fmt.Println(v)
-	}
+	// if v, ok := token.Claims.(*jwtPackage.ClaimsWithOriginal); ok {
+	// 	fmt.Println(v)
+	// }
 }
