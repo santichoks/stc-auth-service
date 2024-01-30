@@ -8,6 +8,9 @@ import (
 )
 
 type AuthRedisRepository interface {
+	Get(key string) (string, error)
+	Set(key string, value string, exp time.Duration) error
+	Delete(key []string) (int64, error)
 }
 
 type authRedisRepository struct {

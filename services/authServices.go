@@ -1,13 +1,21 @@
 package services
 
 import (
+	"errors"
+	"time"
+
 	"github.com/santichoks/stc-auth-service/config"
 	"github.com/santichoks/stc-auth-service/models"
+	jwt_package "github.com/santichoks/stc-auth-service/pkgs/jwtPackage"
 	"github.com/santichoks/stc-auth-service/repositories"
+	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService interface {
-	SignUpSrv(req models.SignUpReq, cfg *config.Config)
+	LoginSrv(req models.LoginReq, cfg *config.Config) (*models.TokenRes, error)
+	LogoutSrv(accessToken, refreshToken string) error
+	SignupSrv(req models.SignupReq, cfg *config.Config) (*models.TokenRes, error)
 }
 
 type authService struct {
@@ -22,22 +30,96 @@ func NewAuthService(mongoRepo repositories.AuthMongoRepository, redisRepo reposi
 	}
 }
 
-func (srv authService) SignUpSrv(req models.SignUpReq, cfg *config.Config) {
-	// myClaims := jwtPackage.MyClaims{
-	// 	UserId:    "",
-	// 	Email:     "myemail@stc.com",
-	// 	FirstName: "Santichok",
-	// 	LastName:  "Sangarun",
-	// }
+func (srv authService) LoginSrv(req models.LoginReq, cfg *config.Config) (*models.TokenRes, error) {
+	user, err := srv.mongoRepo.FindOneUserByEmail(req.Email)
+	if err != nil {
+		return nil, errors.New("invalid email or password")
+	}
 
-	// tokenString := jwtPackage.InitAccessToken(cfg.Jwt.AccessTokenSecret, cfg.Jwt.AccessTokenDuration, &myClaims).SignToken()
-	// fmt.Println(tokenString)
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
+	if err != nil {
+		return nil, errors.New("invalid email or password")
+	}
 
-	// token, _ := jwt.ParseWithClaims(tokenString, &jwtPackage.ClaimsWithOriginal{}, func(t *jwt.Token) (interface{}, error) {
-	// 	return []byte(cfg.Jwt.AccessTokenSecret), nil
-	// })
+	myClaims := jwt_package.MyClaims{
+		UserId:    user.Id.String(),
+		Email:     user.Email,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+	}
 
-	// if v, ok := token.Claims.(*jwtPackage.ClaimsWithOriginal); ok {
-	// 	fmt.Println(v)
-	// }
+	accessToken := jwt_package.InitAccessToken(cfg.Jwt.AccessTokenSecret, cfg.Jwt.AccessTokenDuration, &myClaims)
+	refreshToken := jwt_package.InitRefreshToken(cfg.Jwt.RefreshTokenSecret, cfg.Jwt.RefreshTokenDuration, &myClaims)
+	tokenRes := models.TokenRes{
+		AccessToken:  accessToken.SignToken(),
+		RefreshToken: refreshToken.SignToken(),
+	}
+
+	return &tokenRes, nil
+}
+
+func (srv authService) LogoutSrv(accessToken, refreshToken string) error {
+	var err error
+	err = srv.redisRepo.Set(accessToken, "accessToken", 10) // TO-DO ---------------------------------------------
+	if err != nil {
+		return err
+	}
+
+	err = srv.redisRepo.Set(refreshToken, "refreshToken", 10) // TO-DO ---------------------------------------------
+	if err != nil {
+		return err
+	}
+
+	// TO-DO ---------------------------------------------
+
+	// TO-DO ---------------------------------------------
+
+	return nil
+}
+
+func (srv authService) SignupSrv(req models.SignupReq, cfg *config.Config) (*models.TokenRes, error) {
+	_, err := srv.mongoRepo.FindOneUserByEmail(req.Email)
+	if err != nil && err != mongo.ErrNoDocuments {
+		return nil, err
+	}
+	if err == nil {
+		return nil, errors.New("email already exists")
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
+	location, _ := time.LoadLocation("Asia/Bangkok")
+	now := time.Now().In(location)
+	user := models.User{
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Email:     req.Email,
+		Password:  string(hashedPassword),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	objectID, err := srv.mongoRepo.InsertOneUser(user)
+	if err != nil {
+		return nil, err
+	}
+
+	myClaims := jwt_package.MyClaims{
+		UserId:    objectID.String(),
+		Email:     user.Email,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+	}
+
+	accessToken := jwt_package.InitAccessToken(cfg.Jwt.AccessTokenSecret, cfg.Jwt.AccessTokenDuration, &myClaims)
+	refreshToken := jwt_package.InitRefreshToken(cfg.Jwt.RefreshTokenSecret, cfg.Jwt.RefreshTokenDuration, &myClaims)
+	tokenRes := models.TokenRes{
+		AccessToken:  accessToken.SignToken(),
+		RefreshToken: refreshToken.SignToken(),
+	}
+
+	return &tokenRes, nil
 }

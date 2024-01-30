@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	AllowOrigins  string
+	AllowHeaders  string
 	MongoUri      string
 	RedisUri      string
 	RedisPassword string
@@ -31,6 +32,7 @@ func GetConfig() Config {
 
 	return Config{
 		AllowOrigins:  os.Getenv("ACCESS_ORIGINS"),
+		AllowHeaders:  os.Getenv("ACCESS_HEADERS"),
 		MongoUri:      os.Getenv("MONGO_URI"),
 		RedisUri:      os.Getenv("REDIS_URI"),
 		RedisPassword: os.Getenv("REDIS_PASSWORD"),

@@ -39,6 +39,7 @@ func main() {
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     cfg.AllowOrigins,
 		AllowMethods:     strings.Join([]string{fiber.MethodGet, fiber.MethodPost, fiber.MethodPut, fiber.MethodPatch, fiber.MethodDelete}, ","),
+		AllowHeaders:     cfg.AllowHeaders,
 		AllowCredentials: true,
 	}))
 
