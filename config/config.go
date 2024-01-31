@@ -11,10 +11,12 @@ import (
 type Config struct {
 	AllowOrigins  string
 	AllowHeaders  string
-	MongoUri      string
-	RedisUri      string
+	MongoHost     string
+	MongoUsername string
+	MongoPassword string
+	RedisHost     string
 	RedisPassword string
-	KafkaUri      string
+	KafkaHost     string
 	Jwt           Jwt
 }
 
@@ -33,10 +35,12 @@ func GetConfig() Config {
 	return Config{
 		AllowOrigins:  os.Getenv("ACCESS_ORIGINS"),
 		AllowHeaders:  os.Getenv("ACCESS_HEADERS"),
-		MongoUri:      os.Getenv("MONGO_URI"),
-		RedisUri:      os.Getenv("REDIS_URI"),
+		MongoHost:     os.Getenv("MONGO_HOST"),
+		MongoUsername: os.Getenv("MONGO_USERNAME"),
+		MongoPassword: os.Getenv("MONGO_PASSWORD"),
+		RedisHost:     os.Getenv("REDIS_HOST"),
 		RedisPassword: os.Getenv("REDIS_PASSWORD"),
-		KafkaUri:      os.Getenv("KAFKA_URI"),
+		KafkaHost:     os.Getenv("KAFKA_HOST"),
 		Jwt: Jwt{
 			AccessTokenSecret: os.Getenv("JWT_ACCESS_TOKEN_SECRET"),
 			AccessTokenDuration: func() int64 {

@@ -14,7 +14,7 @@ import (
 
 type AuthService interface {
 	LoginSrv(req models.LoginReq, cfg *config.Config) (*models.TokenRes, error)
-	LogoutSrv(accessToken, refreshToken string) error
+	LogoutSrv(accessToken string, refreshToken string, cfg *config.Config) error
 	SignupSrv(req models.SignupReq, cfg *config.Config) (*models.TokenRes, error)
 }
 
@@ -58,21 +58,22 @@ func (srv authService) LoginSrv(req models.LoginReq, cfg *config.Config) (*model
 	return &tokenRes, nil
 }
 
-func (srv authService) LogoutSrv(accessToken, refreshToken string) error {
-	var err error
-	err = srv.redisRepo.Set(accessToken, "accessToken", 10) // TO-DO ---------------------------------------------
+func (srv authService) LogoutSrv(accessToken, refreshToken string, cfg *config.Config) error {
+	accesTtokenClaims, err := jwt_package.ParseToken(accessToken, cfg.Jwt.AccessTokenSecret)
+	refreshTokenClaims, err := jwt_package.ParseToken(refreshToken, cfg.Jwt.RefreshTokenSecret)
+
+	accessTokenExpiredAt := accesTtokenClaims.ExpiresAt.Time.Sub(time.Now())
+	refreshTokenExpiredAt := refreshTokenClaims.ExpiresAt.Time.Sub(time.Now())
+
+	err = srv.redisRepo.Set(accessToken, "accessToken", accessTokenExpiredAt)
 	if err != nil {
 		return err
 	}
 
-	err = srv.redisRepo.Set(refreshToken, "refreshToken", 10) // TO-DO ---------------------------------------------
+	err = srv.redisRepo.Set(refreshToken, "refreshToken", refreshTokenExpiredAt)
 	if err != nil {
 		return err
 	}
-
-	// TO-DO ---------------------------------------------
-
-	// TO-DO ---------------------------------------------
 
 	return nil
 }
@@ -91,15 +92,13 @@ func (srv authService) SignupSrv(req models.SignupReq, cfg *config.Config) (*mod
 		return nil, err
 	}
 
-	location, _ := time.LoadLocation("Asia/Bangkok")
-	now := time.Now().In(location)
 	user := models.User{
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
 		Email:     req.Email,
 		Password:  string(hashedPassword),
-		CreatedAt: now,
-		UpdatedAt: now,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	objectID, err := srv.mongoRepo.InsertOneUser(user)

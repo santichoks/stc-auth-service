@@ -1,6 +1,7 @@
 package jwt_package
 
 import (
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -29,14 +30,28 @@ func (a Claims) SignToken() string {
 	return tokenString
 }
 
+func ParseToken(tokenString string, secret string) (*ClaimsWithOriginal, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &ClaimsWithOriginal{}, func(t *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if tokenDetail, ok := token.Claims.(*ClaimsWithOriginal); ok {
+		return tokenDetail, nil
+	}
+
+	return nil, errors.New("claims type is invalid")
+}
+
 func currentDateTime() *jwt.NumericDate {
-	location, _ := time.LoadLocation("Asia/Bangkok")
-	return jwt.NewNumericDate(time.Now().In(location))
+	return jwt.NewNumericDate(time.Now())
 }
 
 func expiredDateTime(t int64) *jwt.NumericDate {
-	location, _ := time.LoadLocation("Asia/Bangkok")
-	return jwt.NewNumericDate(time.Now().In(location).Add(time.Duration(t) * time.Second))
+	return jwt.NewNumericDate(time.Now().Add(time.Duration(t) * time.Second))
 }
 
 func InitAccessToken(secret string, expiredAt int64, myClaims *MyClaims) *Claims {

@@ -7,7 +7,7 @@ import (
 
 func NewRedisConnection(cfg *config.Config) *redis.Client {
 	client := redis.NewClient(&redis.Options{
-		Addr:     cfg.RedisUri,
+		Addr:     cfg.RedisHost,
 		Password: cfg.RedisPassword,
 		DB:       1,
 	})

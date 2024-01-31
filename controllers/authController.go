@@ -54,7 +54,7 @@ func (ctrl authController) LogoutCtrl(c *fiber.Ctx) error {
 	accessToken := c.Get("X-Access-Token")
 	refreshToken := c.Get("X-Refresh-Token")
 
-	err := ctrl.srv.LogoutSrv(accessToken, refreshToken)
+	err := ctrl.srv.LogoutSrv(accessToken, refreshToken, ctrl.cfg)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(error_package.ErrorResponse(err))
 	}

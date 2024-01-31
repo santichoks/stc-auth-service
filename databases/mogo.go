@@ -15,7 +15,11 @@ func NewMongoConnection(cfg *config.Config) *mongo.Client {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoUri))
+	credential := options.Credential{
+		Username: cfg.MongoUsername,
+		Password: cfg.MongoPassword,
+	}
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoHost).SetAuth(credential))
 	if err != nil {
 		log.Fatalf("Database Connection Error : %s", err.Error())
 	}

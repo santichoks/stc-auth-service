@@ -6,6 +6,7 @@ import (
 )
 
 func AuthRoute(r *fiber.App, controller controllers.AuthController) {
+	r.All("/gateway", nil, nil, nil)
 	r.Get("/healthz", controller.Healthz)
 	r.Post("/login", controller.LoginCtrl)
 	r.Post("/logout", controller.LogoutCtrl)
