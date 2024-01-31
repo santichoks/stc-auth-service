@@ -6,7 +6,7 @@ import (
 
 	"github.com/santichoks/stc-auth-service/config"
 	"github.com/santichoks/stc-auth-service/models"
-	jwt_package "github.com/santichoks/stc-auth-service/pkgs/jwtPackage"
+	"github.com/santichoks/stc-auth-service/pkgs/jwtPkg"
 	"github.com/santichoks/stc-auth-service/repositories"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
@@ -41,15 +41,15 @@ func (srv authService) LoginSrv(req models.LoginReq, cfg *config.Config) (*model
 		return nil, errors.New("invalid email or password")
 	}
 
-	myClaims := jwt_package.MyClaims{
+	myClaims := jwtPkg.MyClaims{
 		UserId:    user.Id.String(),
 		Email:     user.Email,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 	}
 
-	accessToken := jwt_package.InitAccessToken(cfg.Jwt.AccessTokenSecret, cfg.Jwt.AccessTokenDuration, &myClaims)
-	refreshToken := jwt_package.InitRefreshToken(cfg.Jwt.RefreshTokenSecret, cfg.Jwt.RefreshTokenDuration, &myClaims)
+	accessToken := jwtPkg.InitAccessToken(cfg.Jwt.AccessTokenSecret, cfg.Jwt.AccessTokenDuration, &myClaims)
+	refreshToken := jwtPkg.InitRefreshToken(cfg.Jwt.RefreshTokenSecret, cfg.Jwt.RefreshTokenDuration, &myClaims)
 	tokenRes := models.TokenRes{
 		AccessToken:  accessToken.SignToken(),
 		RefreshToken: refreshToken.SignToken(),
@@ -59,8 +59,8 @@ func (srv authService) LoginSrv(req models.LoginReq, cfg *config.Config) (*model
 }
 
 func (srv authService) LogoutSrv(accessToken, refreshToken string, cfg *config.Config) error {
-	accesTtokenClaims, err := jwt_package.ParseToken(accessToken, cfg.Jwt.AccessTokenSecret)
-	refreshTokenClaims, err := jwt_package.ParseToken(refreshToken, cfg.Jwt.RefreshTokenSecret)
+	accesTtokenClaims, err := jwtPkg.ParseToken(accessToken, cfg.Jwt.AccessTokenSecret)
+	refreshTokenClaims, err := jwtPkg.ParseToken(refreshToken, cfg.Jwt.RefreshTokenSecret)
 
 	accessTokenExpiredAt := accesTtokenClaims.ExpiresAt.Time.Sub(time.Now())
 	refreshTokenExpiredAt := refreshTokenClaims.ExpiresAt.Time.Sub(time.Now())
@@ -106,15 +106,15 @@ func (srv authService) SignupSrv(req models.SignupReq, cfg *config.Config) (*mod
 		return nil, err
 	}
 
-	myClaims := jwt_package.MyClaims{
+	myClaims := jwtPkg.MyClaims{
 		UserId:    objectID.String(),
 		Email:     user.Email,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 	}
 
-	accessToken := jwt_package.InitAccessToken(cfg.Jwt.AccessTokenSecret, cfg.Jwt.AccessTokenDuration, &myClaims)
-	refreshToken := jwt_package.InitRefreshToken(cfg.Jwt.RefreshTokenSecret, cfg.Jwt.RefreshTokenDuration, &myClaims)
+	accessToken := jwtPkg.InitAccessToken(cfg.Jwt.AccessTokenSecret, cfg.Jwt.AccessTokenDuration, &myClaims)
+	refreshToken := jwtPkg.InitRefreshToken(cfg.Jwt.RefreshTokenSecret, cfg.Jwt.RefreshTokenDuration, &myClaims)
 	tokenRes := models.TokenRes{
 		AccessToken:  accessToken.SignToken(),
 		RefreshToken: refreshToken.SignToken(),

@@ -4,7 +4,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/santichoks/stc-auth-service/config"
 	"github.com/santichoks/stc-auth-service/models"
-	error_package "github.com/santichoks/stc-auth-service/pkgs/errorPackage"
+	"github.com/santichoks/stc-auth-service/pkgs/errorPkg"
+
 	"github.com/santichoks/stc-auth-service/services"
 )
 
@@ -39,12 +40,12 @@ func (ctrl authController) Healthz(c *fiber.Ctx) error {
 func (ctrl authController) LoginCtrl(c *fiber.Ctx) error {
 	var req models.LoginReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(error_package.ErrorResponse(err))
+		return c.Status(fiber.StatusBadRequest).JSON(errorPkg.ErrorResponse(err))
 	}
 
 	response, err := ctrl.srv.LoginSrv(req, ctrl.cfg)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(error_package.ErrorResponse(err))
+		return c.Status(fiber.StatusUnauthorized).JSON(errorPkg.ErrorResponse(err))
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response)
@@ -56,7 +57,7 @@ func (ctrl authController) LogoutCtrl(c *fiber.Ctx) error {
 
 	err := ctrl.srv.LogoutSrv(accessToken, refreshToken, ctrl.cfg)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(error_package.ErrorResponse(err))
+		return c.Status(fiber.StatusInternalServerError).JSON(errorPkg.ErrorResponse(err))
 	}
 
 	return c.Status(fiber.StatusOK).JSON(nil)
@@ -65,12 +66,12 @@ func (ctrl authController) LogoutCtrl(c *fiber.Ctx) error {
 func (ctrl authController) SignupCtrl(c *fiber.Ctx) error {
 	var req models.SignupReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(error_package.ErrorResponse(err))
+		return c.Status(fiber.StatusBadRequest).JSON(errorPkg.ErrorResponse(err))
 	}
 
 	response, err := ctrl.srv.SignupSrv(req, ctrl.cfg)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(error_package.ErrorResponse(err))
+		return c.Status(fiber.StatusInternalServerError).JSON(errorPkg.ErrorResponse(err))
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response)

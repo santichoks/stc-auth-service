@@ -11,7 +11,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/santichoks/stc-auth-service/config"
 	"github.com/santichoks/stc-auth-service/controllers"
-	"github.com/santichoks/stc-auth-service/databases"
+	"github.com/santichoks/stc-auth-service/pkgs/databasePkg"
+
 	"github.com/santichoks/stc-auth-service/repositories"
 	"github.com/santichoks/stc-auth-service/router"
 	"github.com/santichoks/stc-auth-service/services"
@@ -22,8 +23,8 @@ func main() {
 	cfg := config.GetConfig()
 
 	// MongoDB and Redis Connection
-	mongo := databases.NewMongoConnection(&cfg)
-	redis := databases.NewRedisConnection(&cfg)
+	mongo := databasePkg.NewMongoConnection(&cfg)
+	redis := databasePkg.NewRedisConnection(&cfg)
 	defer mongo.Disconnect(context.Background())
 	defer redis.Close()
 

@@ -1,4 +1,4 @@
-package error_package
+package errorPkg
 
 type ErrorResp struct {
 	Message string `json:"message"`
