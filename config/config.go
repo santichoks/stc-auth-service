@@ -10,7 +10,6 @@ import (
 
 type Config struct {
 	AllowOrigins  string
-	AllowHeaders  string
 	MongoHost     string
 	MongoUsername string
 	MongoPassword string
@@ -34,7 +33,6 @@ func GetConfig() Config {
 
 	return Config{
 		AllowOrigins:  os.Getenv("ACCESS_ORIGINS"),
-		AllowHeaders:  os.Getenv("ACCESS_HEADERS"),
 		MongoHost:     os.Getenv("MONGO_HOST"),
 		MongoUsername: os.Getenv("MONGO_USERNAME"),
 		MongoPassword: os.Getenv("MONGO_PASSWORD"),

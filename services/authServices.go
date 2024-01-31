@@ -60,7 +60,14 @@ func (srv authService) LoginSrv(req models.LoginReq, cfg *config.Config) (*model
 
 func (srv authService) LogoutSrv(accessToken, refreshToken string, cfg *config.Config) error {
 	accesTtokenClaims, err := jwtPkg.ParseToken(accessToken, cfg.Jwt.AccessTokenSecret)
+	if err != nil {
+		return err
+	}
+
 	refreshTokenClaims, err := jwtPkg.ParseToken(refreshToken, cfg.Jwt.RefreshTokenSecret)
+	if err != nil {
+		return err
+	}
 
 	accessTokenExpiredAt := accesTtokenClaims.ExpiresAt.Time.Sub(time.Now())
 	refreshTokenExpiredAt := refreshTokenClaims.ExpiresAt.Time.Sub(time.Now())
