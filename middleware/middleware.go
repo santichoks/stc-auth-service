@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
 	"github.com/santichoks/stc-auth-service/config"
 	"github.com/santichoks/stc-auth-service/pkgs/jwtPkg"
@@ -40,7 +39,11 @@ func (m gatewayMiddleware) VerifyToken(c *fiber.Ctx) error {
 	}
 
 	accessTokenClaims, err := jwtPkg.ParseToken(accessToken, m.cfg.Jwt.AccessTokenSecret)
-	if err == jwt.ErrTokenExpired {
+	if err != nil && err.Error() != "token has invalid claims: token is expired" { // TO-DO
+		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, err)
+	}
+
+	if err.Error() == "token has invalid claims: token is expired" { // TO-DO
 		refreshToken := c.Cookies("refreshToken")
 		_, err = m.redis.Get(refreshToken)
 		if err != nil && err != redis.Nil {
@@ -85,10 +88,6 @@ func (m gatewayMiddleware) VerifyToken(c *fiber.Ctx) error {
 		})
 
 		accessTokenClaims = newAccessToken.ClaimsWithOriginal
-	}
-
-	if err != nil && err != jwt.ErrTokenExpired {
-		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, err)
 	}
 
 	user, _ := json.Marshal(jwtPkg.MyClaims{
