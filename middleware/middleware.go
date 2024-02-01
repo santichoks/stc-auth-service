@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
 	"github.com/santichoks/stc-auth-service/config"
 	"github.com/santichoks/stc-auth-service/pkgs/jwtPkg"
@@ -31,7 +32,7 @@ func NewGatewayMiddleware(redis repositories.AuthRedisRepository, cfg *config.Co
 func (m gatewayMiddleware) VerifyToken(c *fiber.Ctx) error {
 	accessToken := c.Cookies("accessToken")
 	_, err := m.redis.Get(accessToken)
-	if err != nil && err != redis.Nil {
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, err)
 	}
 	if err == nil {
@@ -39,14 +40,14 @@ func (m gatewayMiddleware) VerifyToken(c *fiber.Ctx) error {
 	}
 
 	accessTokenClaims, err := jwtPkg.ParseToken(accessToken, m.cfg.Jwt.AccessTokenSecret)
-	if err != nil && err.Error() != "token has invalid claims: token is expired" { // TO-DO
+	if err != nil && !errors.Is(err, jwt.ErrTokenExpired) {
 		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, err)
 	}
 
-	if err.Error() == "token has invalid claims: token is expired" { // TO-DO
+	if errors.Is(err, jwt.ErrTokenExpired) {
 		refreshToken := c.Cookies("refreshToken")
 		_, err = m.redis.Get(refreshToken)
-		if err != nil && err != redis.Nil {
+		if err != nil && !errors.Is(err, redis.Nil) {
 			return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, err)
 		}
 

@@ -88,7 +88,7 @@ func (srv authService) LogoutSrv(accessToken, refreshToken string, cfg *config.C
 
 func (srv authService) SignupSrv(req models.SignupReq, cfg *config.Config) (*models.TokenRes, error) {
 	_, err := srv.mongoRepo.FindOneUserByEmail(req.Email)
-	if err != nil && err != mongo.ErrNoDocuments {
+	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
 		return nil, err
 	}
 	if err == nil {
