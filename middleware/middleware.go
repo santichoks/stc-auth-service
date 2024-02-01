@@ -2,9 +2,9 @@ package middleware
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
 	"github.com/santichoks/stc-auth-service/config"
 	"github.com/santichoks/stc-auth-service/pkgs/jwtPkg"
@@ -51,18 +51,45 @@ func (m gatewayMiddleware) VerifyToken(c *fiber.Ctx) error {
 		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, errors.New("invalid refreshToken token"))
 	}
 
-	_, err = jwtPkg.ParseToken(accessToken, m.cfg.Jwt.AccessTokenSecret)
-	if err != nil {
-		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, err)
-	}
-	_, err = jwtPkg.ParseToken(refreshToken, m.cfg.Jwt.RefreshTokenSecret)
-	if err != nil {
-		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, err)
+	_, accessTokenErr := jwtPkg.ParseToken(accessToken, m.cfg.Jwt.AccessTokenSecret)
+	refreshTokenClaims, refreshTokenErr := jwtPkg.ParseToken(refreshToken, m.cfg.Jwt.RefreshTokenSecret)
+	// access token is expired, but the refresh token still exists.
+	// hence, generate new tokens, both an access token and a refresh token.
+	if accessTokenErr == jwt.ErrTokenExpired && refreshTokenErr == nil {
+		myClaims := jwtPkg.MyClaims{
+			UserId:    refreshTokenClaims.ID,
+			Email:     refreshTokenClaims.Email,
+			FirstName: refreshTokenClaims.FirstName,
+			LastName:  refreshTokenClaims.LastName,
+		}
+
+		newAccessToken := jwtPkg.InitAccessToken(m.cfg.Jwt.AccessTokenSecret, m.cfg.Jwt.AccessTokenDuration, &myClaims)
+		newRefreshToken := jwtPkg.InitRefreshToken(m.cfg.Jwt.RefreshTokenSecret, m.cfg.Jwt.RefreshTokenDuration, &myClaims)
+
+		c.Cookie(&fiber.Cookie{
+			Name:     "X-Access-Token",
+			Value:    newAccessToken.SignToken(),
+			Secure:   true,
+			HTTPOnly: true,
+			SameSite: fiber.CookieSameSiteNoneMode,
+		})
+
+		c.Cookie(&fiber.Cookie{
+			Name:     "X-Refresh-Token",
+			Value:    newRefreshToken.SignToken(),
+			Secure:   true,
+			HTTPOnly: true,
+			SameSite: fiber.CookieSameSiteNoneMode,
+		})
 	}
 
-	// TODO //
-	fmt.Println("PASS")
-	// TODO //
+	if refreshTokenErr != nil && refreshTokenErr != jwt.ErrTokenExpired {
+		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, refreshTokenErr)
+	}
+
+	if refreshTokenErr != nil {
+		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, refreshTokenErr)
+	}
 
 	return c.Next()
 }

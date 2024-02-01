@@ -55,6 +55,7 @@ func (ctrl authController) LoginCtrl(c *fiber.Ctx) error {
 		HTTPOnly: true,
 		SameSite: fiber.CookieSameSiteNoneMode,
 	})
+
 	c.Cookie(&fiber.Cookie{
 		Name:     "X-Refresh-Token",
 		Value:    response.RefreshToken,

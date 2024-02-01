@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/santichoks/stc-auth-service/config"
@@ -100,8 +101,8 @@ func (srv authService) SignupSrv(req models.SignupReq, cfg *config.Config) (*mod
 	}
 
 	user := models.User{
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
+		FirstName: strings.ToLower(req.FirstName),
+		LastName:  strings.ToLower(req.LastName),
 		Email:     req.Email,
 		Password:  string(hashedPassword),
 		CreatedAt: time.Now(),
