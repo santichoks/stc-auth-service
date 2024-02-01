@@ -40,7 +40,7 @@ func (m gatewayMiddleware) VerifyToken(c *fiber.Ctx) error {
 	}
 
 	accessTokenClaims, err := jwtPkg.ParseToken(accessToken, m.cfg.Jwt.AccessTokenSecret)
-	if err != nil && err == jwt.ErrTokenExpired {
+	if err == jwt.ErrTokenExpired {
 		refreshToken := c.Cookies("refreshToken")
 		_, err = m.redis.Get(refreshToken)
 		if err != nil && err != redis.Nil {
@@ -85,7 +85,9 @@ func (m gatewayMiddleware) VerifyToken(c *fiber.Ctx) error {
 		})
 
 		accessTokenClaims = newAccessToken.ClaimsWithOriginal
-	} else {
+	}
+
+	if err != nil && err != jwt.ErrTokenExpired {
 		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, err)
 	}
 
@@ -96,7 +98,7 @@ func (m gatewayMiddleware) VerifyToken(c *fiber.Ctx) error {
 		LastName:  accessTokenClaims.LastName,
 	})
 
-	c.Request().Header.Set("X-Url", "https://pokeapi.co/api/v2")
+	c.Request().Header.Set("X-Url", "https://pokeapi.co/api/v2") // TO-DO
 	c.Request().Header.Set("X-User", string(user))
 
 	return c.Next()
