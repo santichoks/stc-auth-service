@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"encoding/json"
 	"errors"
 
 	"github.com/gofiber/fiber/v2"
@@ -29,33 +30,32 @@ func NewGatewayMiddleware(redis repositories.AuthRedisRepository, cfg *config.Co
 }
 
 func (m gatewayMiddleware) VerifyToken(c *fiber.Ctx) error {
-	accessToken := c.Cookies("X-Access-Token")
-	refreshToken := c.Cookies("X-Refresh-Token")
-
-	var err error
-	_, err = m.redis.Get(accessToken)
+	accessToken := c.Cookies("accessToken")
+	_, err := m.redis.Get(accessToken)
 	if err != nil && err != redis.Nil {
 		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, err)
 	}
-
 	if err == nil {
 		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, errors.New("invalid accessToken token"))
 	}
 
-	_, err = m.redis.Get(refreshToken)
-	if err != nil && err != redis.Nil {
-		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, err)
-	}
+	accessTokenClaims, err := jwtPkg.ParseToken(accessToken, m.cfg.Jwt.AccessTokenSecret)
+	if err != nil && err == jwt.ErrTokenExpired {
+		refreshToken := c.Cookies("refreshToken")
+		_, err = m.redis.Get(refreshToken)
+		if err != nil && err != redis.Nil {
+			return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, err)
+		}
 
-	if err == nil {
-		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, errors.New("invalid refreshToken token"))
-	}
+		if err == nil {
+			return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, errors.New("invalid refreshToken token"))
+		}
 
-	_, accessTokenErr := jwtPkg.ParseToken(accessToken, m.cfg.Jwt.AccessTokenSecret)
-	refreshTokenClaims, refreshTokenErr := jwtPkg.ParseToken(refreshToken, m.cfg.Jwt.RefreshTokenSecret)
-	// access token is expired, but the refresh token still exists.
-	// hence, generate new tokens, both an access token and a refresh token.
-	if accessTokenErr == jwt.ErrTokenExpired && refreshTokenErr == nil {
+		refreshTokenClaims, err := jwtPkg.ParseToken(refreshToken, m.cfg.Jwt.RefreshTokenSecret)
+		if err != nil {
+			return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, err)
+		}
+
 		myClaims := jwtPkg.MyClaims{
 			UserId:    refreshTokenClaims.ID,
 			Email:     refreshTokenClaims.Email,
@@ -67,29 +67,37 @@ func (m gatewayMiddleware) VerifyToken(c *fiber.Ctx) error {
 		newRefreshToken := jwtPkg.InitRefreshToken(m.cfg.Jwt.RefreshTokenSecret, m.cfg.Jwt.RefreshTokenDuration, &myClaims)
 
 		c.Cookie(&fiber.Cookie{
-			Name:     "X-Access-Token",
+			Name:     "accessToken",
 			Value:    newAccessToken.SignToken(),
 			Secure:   true,
 			HTTPOnly: true,
 			SameSite: fiber.CookieSameSiteNoneMode,
+			// TO-DO must set an expiration date.
 		})
 
 		c.Cookie(&fiber.Cookie{
-			Name:     "X-Refresh-Token",
+			Name:     "refreshToken",
 			Value:    newRefreshToken.SignToken(),
 			Secure:   true,
 			HTTPOnly: true,
 			SameSite: fiber.CookieSameSiteNoneMode,
+			// TO-DO must set an expiration date.
 		})
+
+		accessTokenClaims = newAccessToken.ClaimsWithOriginal
+	} else {
+		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, err)
 	}
 
-	if refreshTokenErr != nil && refreshTokenErr != jwt.ErrTokenExpired {
-		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, refreshTokenErr)
-	}
+	user, _ := json.Marshal(jwtPkg.MyClaims{
+		UserId:    accessTokenClaims.ID,
+		Email:     accessTokenClaims.Email,
+		FirstName: accessTokenClaims.FirstName,
+		LastName:  accessTokenClaims.LastName,
+	})
 
-	if refreshTokenErr != nil {
-		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, refreshTokenErr)
-	}
+	c.Request().Header.Set("X-Url", "https://pokeapi.co/api/v2")
+	c.Request().Header.Set("X-User", string(user))
 
 	return c.Next()
 }

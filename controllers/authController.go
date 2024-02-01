@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/santichoks/stc-auth-service/config"
 	"github.com/santichoks/stc-auth-service/models"
@@ -34,7 +36,26 @@ func (ctrl authController) Healthz(c *fiber.Ctx) error {
 }
 
 func (ctrl authController) GatewayCtrl(c *fiber.Ctx) error {
-	return nil
+	clientHost := c.Get("X-Url")
+	clientPath := strings.TrimPrefix(c.Path(), "/gateway")
+	clientMethod := c.Method()
+	clientBody := c.Body()
+
+	agent := fiber.AcquireAgent()
+	agent.Request().Header.SetRequestURI(clientHost + clientPath)
+	agent.Request().Header.SetMethod(clientMethod)
+	agent.Request().SetBody(clientBody)
+	agent.Set("X-User", c.Get("X-User"))
+	if err := agent.Parse(); err != nil {
+		responsePkg.ErrorResponse(c, fiber.StatusBadGateway, fiber.ErrBadGateway)
+	}
+
+	statusCode, data, err := agent.Bytes()
+	if err != nil || len(err) > 0 {
+		responsePkg.ErrorResponse(c, fiber.StatusBadGateway, fiber.ErrBadGateway)
+	}
+
+	return c.Status(statusCode).Send(data)
 }
 
 func (ctrl authController) LoginCtrl(c *fiber.Ctx) error {
@@ -49,27 +70,29 @@ func (ctrl authController) LoginCtrl(c *fiber.Ctx) error {
 	}
 
 	c.Cookie(&fiber.Cookie{
-		Name:     "X-Access-Token",
+		Name:     "accessToken",
 		Value:    response.AccessToken,
 		Secure:   true,
 		HTTPOnly: true,
 		SameSite: fiber.CookieSameSiteNoneMode,
+		// TO-DO must set an expiration date.
 	})
 
 	c.Cookie(&fiber.Cookie{
-		Name:     "X-Refresh-Token",
+		Name:     "refreshToken",
 		Value:    response.RefreshToken,
 		Secure:   true,
 		HTTPOnly: true,
 		SameSite: fiber.CookieSameSiteNoneMode,
+		// TO-DO must set an expiration date.
 	})
 
 	return responsePkg.SuccessResponse(c, fiber.StatusOK, "successfully")
 }
 
 func (ctrl authController) LogoutCtrl(c *fiber.Ctx) error {
-	accessToken := c.Cookies("X-Access-Token")
-	refreshToken := c.Cookies("X-Refresh-Token")
+	accessToken := c.Cookies("accessToken")
+	refreshToken := c.Cookies("refreshToken")
 
 	err := ctrl.srv.LogoutSrv(accessToken, refreshToken, ctrl.cfg)
 	if err != nil {
