@@ -95,10 +95,7 @@ func (srv authService) SignupSrv(req models.SignupReq, cfg *config.Config) (*mod
 		return nil, errors.New("email already exists")
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, err
-	}
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 
 	user := models.User{
 		FirstName: strings.ToLower(req.FirstName),

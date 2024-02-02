@@ -3,6 +3,7 @@ package middleware
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -98,7 +99,15 @@ func (m gatewayMiddleware) VerifyToken(c *fiber.Ctx) error {
 		LastName:  accessTokenClaims.LastName,
 	})
 
-	c.Request().Header.Set("X-Url", "https://pokeapi.co/api/v2") // TO-DO
+	var serviceHost string
+	for i := range m.cfg.ServiceLists {
+		if strings.HasPrefix(strings.TrimPrefix(c.Path(), "/gateway"), m.cfg.ServiceLists[i].Alias) {
+			serviceHost = m.cfg.ServiceLists[i].Host
+			break
+		}
+	}
+
+	c.Request().Header.Set("X-Url", serviceHost)
 	c.Request().Header.Set("X-User", string(user))
 
 	return c.Next()
