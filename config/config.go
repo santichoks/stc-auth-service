@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"log"
 	"os"
 	"strconv"
@@ -10,13 +11,18 @@ import (
 
 type Config struct {
 	AllowOrigins  string
+	ServiceLists  []Service
 	MongoHost     string
 	MongoUsername string
 	MongoPassword string
 	RedisHost     string
 	RedisPassword string
-	KafkaHost     string
 	Jwt           Jwt
+}
+
+type Service struct {
+	Host  string `json:"host"`
+	Alias string `json:"alias"`
 }
 
 type Jwt struct {
@@ -32,13 +38,22 @@ func GetConfig() Config {
 	}
 
 	return Config{
-		AllowOrigins:  os.Getenv("ACCESS_ORIGINS"),
+		AllowOrigins: os.Getenv("ACCESS_ORIGINS"),
+		ServiceLists: func() []Service {
+			serviceLists := os.Getenv("SERVICE_LISTS")
+			var res []Service
+			err := json.Unmarshal([]byte(serviceLists), &res)
+			if err != nil {
+				log.Fatalf("Error loading SERVICE_LISTS : %s", err.Error())
+			}
+
+			return res
+		}(),
 		MongoHost:     os.Getenv("MONGO_HOST"),
 		MongoUsername: os.Getenv("MONGO_USERNAME"),
 		MongoPassword: os.Getenv("MONGO_PASSWORD"),
 		RedisHost:     os.Getenv("REDIS_HOST"),
 		RedisPassword: os.Getenv("REDIS_PASSWORD"),
-		KafkaHost:     os.Getenv("KAFKA_HOST"),
 		Jwt: Jwt{
 			AccessTokenSecret: os.Getenv("JWT_ACCESS_TOKEN_SECRET"),
 			AccessTokenDuration: func() int64 {
