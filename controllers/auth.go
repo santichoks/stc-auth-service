@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -50,12 +51,18 @@ func (ctrl authController) GatewayCtrl(c *fiber.Ctx) error {
 		responsePkg.ErrorResponse(c, fiber.StatusBadGateway, fiber.ErrBadGateway)
 	}
 
-	statusCode, data, err := agent.Bytes()
-	if err != nil || len(err) > 0 {
+	statusCode, data, errs := agent.Bytes()
+	if errs != nil || len(errs) > 0 {
 		responsePkg.ErrorResponse(c, fiber.StatusBadGateway, fiber.ErrBadGateway)
 	}
 
-	return c.Status(statusCode).Send(data)
+	var response map[string]json.RawMessage
+	err := json.Unmarshal(data, &response)
+	if err != nil {
+		responsePkg.ErrorResponse(c, fiber.StatusBadGateway, fiber.ErrBadGateway)
+	}
+
+	return c.Status(statusCode).JSON(response)
 }
 
 func (ctrl authController) LoginCtrl(c *fiber.Ctx) error {
