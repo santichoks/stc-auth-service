@@ -1,6 +1,9 @@
 <h1>stc-auth-service</h1>
 <h2>Introduction</h2>
 <ul>This project was created with the purpose of studying authentication and authorization in microservices (API Gateway)</ul>
+<p align="center">
+  <img src="./other/arch.png">
+</p>
 <h2>Project Structure</h2>
 
 ```text
@@ -174,7 +177,9 @@ stc-auth-service/
     "message": "successfully"
   }
   ```
-  
+  <p align="center">
+    <img src="./other/cookie.png">
+  </p>
 </li>
 <li>
   <h4>Login</h4>
@@ -197,6 +202,9 @@ stc-auth-service/
       "message": "successfully"
   }
   ```
+  <p align="center">
+    <img src="./other/cookie.png">
+  </p>
 </li>
 <li>
   <h4>Logout</h4>
@@ -205,13 +213,16 @@ stc-auth-service/
   |:-:|:-:|-|
   |`/logout`|POST|`http://localhost:8080/logout`|
   
-  Example Response
+  Example Response : `accessToke` and `refreshToken` in black list (redis).
   ```
   {
       "statusCode": 200,
       "message": "successfully"
   }
   ```
+  <p align="center">
+    <img src="./other/blacklist.png">
+  </p>
 </li>
 </ul>
 
