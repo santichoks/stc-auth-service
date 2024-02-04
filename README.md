@@ -307,7 +307,3 @@ stc-auth-service/
   ```
 </li>
 </ul>
-
-
-
-Special Thanks <a href="https://pokeapi.co/)https://pokeapi.co/">Poké API</a>
