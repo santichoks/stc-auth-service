@@ -120,5 +120,23 @@ func (ctrl authController) SignupCtrl(c *fiber.Ctx) error {
 		return responsePkg.ErrorResponse(c, fiber.StatusBadRequest, err)
 	}
 
-	return responsePkg.SuccessResponse(c, fiber.StatusOK, response)
+	c.Cookie(&fiber.Cookie{
+		Name:     "accessToken",
+		Value:    response.AccessToken,
+		Secure:   true,
+		HTTPOnly: true,
+		SameSite: fiber.CookieSameSiteNoneMode,
+		// TO-DO must set an expiration date.
+	})
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "refreshToken",
+		Value:    response.RefreshToken,
+		Secure:   true,
+		HTTPOnly: true,
+		SameSite: fiber.CookieSameSiteNoneMode,
+		// TO-DO must set an expiration date.
+	})
+
+	return responsePkg.SuccessResponse(c, fiber.StatusOK, "successfully")
 }
