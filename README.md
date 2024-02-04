@@ -308,6 +308,4 @@ stc-auth-service/
 </li>
 </ul>
 
-Special Thanks
-
-A heartfelt thank you to PokeAPI for generously providing the API used in this example.
+Special Thanks <a href="https://pokeapi.co/)https://pokeapi.co/">Poké API</a>
