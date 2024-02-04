@@ -54,8 +54,8 @@ func TestGatewayCtrl(t *testing.T) {
 		app := fiber.New()
 		app.Get("/gateway/*", authCtrl.GatewayCtrl)
 
-		req := httptest.NewRequest("GET", "/gateway/api/v2/pokemon/", nil)
-		req.Header.Set("X-Url", "https://pokeapi.co")
+		req := httptest.NewRequest("GET", "/gateway/pokeapi/api/v2/pokemon", nil)
+		req.Header.Set("X-Uri", "https://pokeapi.co/api/v2/pokemon")
 		res, _ := app.Test(req)
 		defer res.Body.Close()
 
@@ -70,8 +70,8 @@ func TestGatewayCtrl(t *testing.T) {
 		app := fiber.New()
 		app.Get("/gateway/*", authCtrl.GatewayCtrl)
 
-		req := httptest.NewRequest("GET", "/gateway/api/v2/pokemon/", nil)
-		req.Header.Set("X-Url", "app://pokeapi.co")
+		req := httptest.NewRequest("GET", "/gateway/pokeapi/api/v2/pokemon", nil)
+		req.Header.Set("X-Uri", "app://pokeapi.co/api/v2/pokemon")
 		res, _ := app.Test(req)
 		defer res.Body.Close()
 
@@ -86,8 +86,8 @@ func TestGatewayCtrl(t *testing.T) {
 		app := fiber.New()
 		app.Get("/gateway/*", authCtrl.GatewayCtrl)
 
-		req := httptest.NewRequest("GET", "/gateway/api/v2/pokemon/", nil)
-		req.Header.Set("X-Url", "pokeapi.co")
+		req := httptest.NewRequest("GET", "/gateway/pokeapi/api/v2/pokemon", nil)
+		req.Header.Set("X-Uri", "pokeapi.co/api/v2/pokemon")
 		res, _ := app.Test(req)
 		defer res.Body.Close()
 
@@ -102,8 +102,8 @@ func TestGatewayCtrl(t *testing.T) {
 		app := fiber.New()
 		app.Get("/gateway/*", authCtrl.GatewayCtrl)
 
-		req := httptest.NewRequest("GET", "/gateway/api/v2/pokemon/", nil)
-		req.Header.Set("X-Url", "http://restapi.adequateshop.com/api/Traveler/14841")
+		req := httptest.NewRequest("GET", "/gateway/api/api/Traveler/14841", nil)
+		req.Header.Set("X-Uri", "http://restapi.adequateshop.com/api/Traveler/14841")
 		res, _ := app.Test(req)
 		defer res.Body.Close()
 
