@@ -48,18 +48,18 @@ func (ctrl authController) GatewayCtrl(c *fiber.Ctx) error {
 	agent.Request().SetBody(clientBody)
 	agent.Set("X-User", c.Get("X-User"))
 	if err := agent.Parse(); err != nil {
-		responsePkg.ErrorResponse(c, fiber.StatusBadGateway, fiber.ErrBadGateway)
+		return responsePkg.ErrorResponse(c, fiber.StatusBadGateway, fiber.ErrBadGateway)
 	}
 
 	statusCode, data, errs := agent.Bytes()
 	if errs != nil || len(errs) > 0 {
-		responsePkg.ErrorResponse(c, fiber.StatusBadGateway, fiber.ErrBadGateway)
+		return responsePkg.ErrorResponse(c, fiber.StatusBadGateway, fiber.ErrBadGateway)
 	}
 
 	var response map[string]json.RawMessage
 	err := json.Unmarshal(data, &response)
 	if err != nil {
-		responsePkg.ErrorResponse(c, fiber.StatusBadGateway, fiber.ErrBadGateway)
+		return responsePkg.ErrorResponse(c, fiber.StatusBadGateway, fiber.ErrBadGateway)
 	}
 
 	return c.Status(statusCode).JSON(response)

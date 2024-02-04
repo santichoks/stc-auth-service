@@ -29,5 +29,5 @@ func (m *authServiceMock) LogoutSrv(accessToken, refreshToken string, cfg *confi
 func (m *authServiceMock) SignupSrv(req models.SignupReq, cfg *config.Config) (*models.TokenRes, error) {
 	args := m.Called(req, cfg)
 
-	return args.Get(0).(*models.TokenRes), args.Error(0)
+	return args.Get(0).(*models.TokenRes), args.Error(1)
 }
