@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/santichoks/stc-auth-service/config"
@@ -37,15 +36,14 @@ func (ctrl authController) Healthz(c *fiber.Ctx) error {
 }
 
 func (ctrl authController) GatewayCtrl(c *fiber.Ctx) error {
-	clientHost := c.Get("X-Url")
-	clientPath := strings.TrimPrefix(c.Path(), "/gateway")
-	clientMethod := c.Method()
-	clientBody := c.Body()
+	serviceUri := c.Get("X-Uri")
+	serviceMethod := c.Method()
+	serviceBody := c.Body()
 
 	agent := fiber.AcquireAgent()
-	agent.Request().Header.SetRequestURI(clientHost + clientPath)
-	agent.Request().Header.SetMethod(clientMethod)
-	agent.Request().SetBody(clientBody)
+	agent.Request().Header.SetRequestURI(serviceUri)
+	agent.Request().Header.SetMethod(serviceMethod)
+	agent.Request().SetBody(serviceBody)
 	agent.Set("X-User", c.Get("X-User"))
 	if err := agent.Parse(); err != nil {
 		return responsePkg.ErrorResponse(c, fiber.StatusBadGateway, fiber.ErrBadGateway)
