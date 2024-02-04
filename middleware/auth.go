@@ -99,15 +99,18 @@ func (m gatewayMiddleware) VerifyToken(c *fiber.Ctx) error {
 		LastName:  accessTokenClaims.LastName,
 	})
 
-	var serviceHost string
+	var serviceUri string
+	path := strings.TrimPrefix(c.Path(), "/gateway")
 	for i := range m.cfg.ServiceLists {
-		if strings.HasPrefix(strings.TrimPrefix(c.Path(), "/gateway"), m.cfg.ServiceLists[i].Alias) {
-			serviceHost = m.cfg.ServiceLists[i].Host
+		serviceHost := m.cfg.ServiceLists[i].Host
+		serviceAlias := m.cfg.ServiceLists[i].Alias
+		if strings.HasPrefix(path, serviceAlias) {
+			serviceUri = serviceHost + strings.TrimPrefix(path, serviceAlias)
 			break
 		}
 	}
 
-	c.Request().Header.Set("X-Url", serviceHost)
+	c.Request().Header.Set("X-Uri", serviceUri)
 	c.Request().Header.Set("X-User", string(user))
 
 	return c.Next()
