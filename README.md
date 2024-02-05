@@ -1,6 +1,6 @@
 <h1>stc-auth-service</h1>
 <h2>Introduction</h2>
-<ul>This project was created with the purpose of studying authentication and authorization in microservices (API Gateway)</ul>
+<ul>This project was created with the purpose of studying authentication and authorization within microservices, with a specific focus on the API Gateway.</ul>
 <p align="center">
   <img src="./other/arch.png">
 </p>
