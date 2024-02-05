@@ -231,7 +231,7 @@ stc-auth-service/
 <li>
   <h4>Overview</h4>
   
-  The API Gateway serves as an intermediary layer between your clients and various services. It acts as a centralized entry point for routing requests to different services based on specified aliases. This allows for abstraction of service details and facilitates seamless integration with multiple back-end services.
+  The API Gateway is like a middleman between your users and different services. It's a central hub that helps send requests to different services using specific aliases. This makes it easier to keep service details hidden and lets you smoothly connect with many backend services.
 </li>
 <li>
   <h4>Configuration in .env file</h4>
