@@ -264,7 +264,7 @@ stc-auth-service/
   
   |Endpoint|Method|Example|
   |:-:|:-:|-|
-  |`/gateway/<SERVICE_ALIAS>/<SERVICE_ENDPOINT>`|ANY|`http://localhost:8080/gateway/pokeapi/api/v2/pokemon/`|
+  |`/gateway/<SERVICE_ALIAS>/<SERVICE_ENDPOINT>`|ANY|GET `http://localhost:8080/gateway/pokeapi/api/v2/pokemon`|
 
   `/gateway` is the base path for the API Gateway.
   
