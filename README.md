@@ -64,6 +64,11 @@ stc-auth-service/
   MONGO_PASSWORD = <MONGO_PASSWORD>
   REDIS_HOST = <REDIS_HOST>
   REDIS_PASSWORD = <REDIS_PASSWORD>
+  SMTP_HOST = <SMTP_HOST>
+  SMTP_PORT = <SMTP_PORT>
+  SENDER_EMAIL = <SENDER_EMAIL>
+  SENDER_PASSWORD = <SENDER_PASSWORD>
+  RESET_PASSWORD_TOKEN_DURATION = <RESET_PASSWORD_TOKEN_DURATION>
   JWT_ACCESS_TOKEN_SECRET = <JWT_ACCESS_TOKEN_SECRET>
   JWT_ACCESS_TOKEN_DURATION = <JWT_ACCESS_TOKEN_DURATION>
   JWT_REFRESH_TOKEN_SECRET = <JWT_REFRESH_TOKEN_SECRET>
@@ -78,10 +83,15 @@ stc-auth-service/
   MONGO_PASSWORD = @123456
   REDIS_HOST = localhost:6379
   REDIS_PASSWORD = @123456
+  SMTP_HOST = smtp.gmail.com # <----------- https://www.prolateral.com/help/kb/smtp/415-list-of-smtp-servers.html
+  SMTP_PORT = 587 # <----------- https://www.prolateral.com/help/kb/smtp/415-list-of-smtp-servers.html
+  SENDER_EMAIL = example@gmail.com
+  SENDER_PASSWORD = zxcvb1234
+  RESET_PASSWORD_TOKEN_DURATION = 900 # <----------- 900 seconds is 15 minutes
   JWT_ACCESS_TOKEN_SECRET = jwt-access-token-secret
-  JWT_ACCESS_TOKEN_DURATION = 86400
+  JWT_ACCESS_TOKEN_DURATION = 86400 # <----------- 86400 seconds is 1 day
   JWT_REFRESH_TOKEN_SECRET = jwt-refresh-token-secret
-  JWT_REFRESH_TOKEN_DURATION = 2592000
+  JWT_REFRESH_TOKEN_DURATION = 2592000 # <----------- 2592000 seconds is 30 days
   ```
 </li>
 <li>
@@ -223,6 +233,74 @@ stc-auth-service/
   <p align="center">
     <img src="./other/blacklist.png">
   </p>
+</li>
+<li>
+  <h4>Reset-Password</h4>
+  
+  |Endpoint|Method|Example|
+  |:-:|:-:|-|
+  |`/reset-password`|POST|`http://localhost:8080/reset-password`|
+
+  Example Request
+  ```
+  {
+      "email": "myexample@gmail.com"
+  }
+  ```
+  Example Response
+  ```
+  {
+      "statusCode": 200,
+      "message": "successfully"
+  }
+  ```
+  <p align="center">
+    <img src="./other/blacklist.png">
+  </p>
+</li>
+<li>
+  <h4>Change-Password <strong>(2 Ways)</strong></h4>
+  
+  <strong>1st</strong> : When logging in, update your password by supplying the old one and specifying the new password.
+  
+  |Endpoint|Method|Example|
+  |:-:|:-:|-|
+  |`/change-password`|POST|`http://localhost:8080/change-password`|
+
+  Example Request
+  ```
+  {
+      "oldPassword": "123456789"
+      "newPassword": "987654321"
+  }
+  ```
+  Example Response
+  ```
+  {
+      "statusCode": 200,
+      "message": "successfully"
+  }
+  ```
+
+  <strong>2nd</strong> : Reset your password using the token you received in an email.
+  
+  |Endpoint|Method|Example|
+  |:-:|:-:|-|
+  |`/change-password`|POST|`http://localhost:8080/change-password?token=xxxxxxxxxxxxx`|
+
+  Example Request
+  ```
+  {
+      "newPassword": "987654321"
+  }
+  ```
+  Example Response
+  ```
+  {
+      "statusCode": 200,
+      "message": "successfully"
+  }
+  ```
 </li>
 </ul>
 
