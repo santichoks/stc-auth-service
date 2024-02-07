@@ -86,11 +86,11 @@ stc-auth-service/
   SMTP_HOST = smtp.gmail.com # <----------- https://www.prolateral.com/help/kb/smtp/415-list-of-smtp-servers.html
   SMTP_PORT = 587 # <----------- https://www.prolateral.com/help/kb/smtp/415-list-of-smtp-servers.html
   SENDER_EMAIL = example@gmail.com
-  SENDER_PASSWORD = zxcvb1234
+  SENDER_PASSWORD = example-sender-password
   RESET_PASSWORD_TOKEN_DURATION = 900 # <----------- 900 seconds is 15 minutes
-  JWT_ACCESS_TOKEN_SECRET = jwt-access-token-secret
+  JWT_ACCESS_TOKEN_SECRET = example-jwt-access-token-secret
   JWT_ACCESS_TOKEN_DURATION = 86400 # <----------- 86400 seconds is 1 day
-  JWT_REFRESH_TOKEN_SECRET = jwt-refresh-token-secret
+  JWT_REFRESH_TOKEN_SECRET = example-jwt-refresh-token-secret
   JWT_REFRESH_TOKEN_DURATION = 2592000 # <----------- 2592000 seconds is 30 days
   ```
 </li>
@@ -254,9 +254,10 @@ stc-auth-service/
       "message": "successfully"
   }
   ```
-  <p align="center">
-    <img src="./other/email.png">
-  </p>
+
+  <kbd>
+    <img src="./other/email.png" style="border: 2px solid  gray;">
+  </kbd>
 </li>
 <li>
   <h4>Change-Password <strong>(2 Ways)</strong></h4>
