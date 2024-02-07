@@ -46,7 +46,7 @@ stc-auth-service/
   <h4>Installation</h4>  
   
   Clone and install Go packages.
-  ```text
+  ```
   $ git clone https://github.com/santichoks/stc-auth-service.git
   $ cd stc-auth-service
   $ go get ./...
@@ -56,7 +56,7 @@ stc-auth-service/
   <h4>Setting Environment</h4>
   
   Create an `.env` file in the application root directory.
-  ```
+  ```env
   ACCESS_ORIGINS = <ACCESS_ORIGINS>
   SERVICE_LISTS = <SERVICE_LISTS>
   MONGO_HOST = <MONGODB_HOST>
