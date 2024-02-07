@@ -46,7 +46,7 @@ stc-auth-service/
   <h4>Installation</h4>  
   
   Clone and install Go packages.
-  ```
+  ```text
   $ git clone https://github.com/santichoks/stc-auth-service.git
   $ cd stc-auth-service
   $ go get ./...
@@ -75,14 +75,14 @@ stc-auth-service/
   JWT_REFRESH_TOKEN_DURATION = <JWT_REFRESH_TOKEN_DURATION>
   ```
   For example
-  ```
+  ```env
   ACCESS_ORIGINS = http://localhost:3000
   SERVICE_LISTS = [{ "host": "https://pokeapi.co", "alias": "/pokeapi" }]
   MONGO_HOST = mongodb://localhost:27017
   MONGO_USERNAME = root
   MONGO_PASSWORD = @123456
   REDIS_HOST = localhost:6379
-  REDIS_PASSWORD = @123456
+  REDIS_PASSWORD = @123456 
   SMTP_HOST = smtp.gmail.com # <----------- https://www.prolateral.com/help/kb/smtp/415-list-of-smtp-servers.html
   SMTP_PORT = 587 # <----------- https://www.prolateral.com/help/kb/smtp/415-list-of-smtp-servers.html
   SENDER_EMAIL = example@gmail.com
@@ -98,7 +98,7 @@ stc-auth-service/
   <h4>Docker Compose for MongoDB and Redis</h4>
   
   You can create `docker-compose.yml` and run cmd `docker-compose up` to install mongodb and redis.
-  ```
+  ```yml
   version: '3.8'
   name: database
   services:
@@ -118,7 +118,7 @@ stc-auth-service/
       command: redis-server --requirepass <REDIS_PASSWORD>
   ```
   For example
-  ```
+  ```yml
   version: '3.8'
   name: database
   services:
@@ -157,7 +157,7 @@ stc-auth-service/
   |`/healthz`|GET|`http://localhost:8080/healthz`|
 
   Example Response
-  ```
+  ```json
   {
     "statusCode": 200,
     "message": "healthy"
@@ -172,7 +172,7 @@ stc-auth-service/
   |`/signup`|POST|`http://localhost:8080/signup`|
 
   Example Request
-  ```
+  ```json
   {
     "firstName": "santichok",
     "lastName": "sangarun",
@@ -181,7 +181,7 @@ stc-auth-service/
   }
   ```
   Example Response : `accessToke` and `refreshToken` in cookie.
-  ```
+  ```json
   {
     "statusCode": 200,
     "message": "successfully"
@@ -199,14 +199,14 @@ stc-auth-service/
   |`/login`|POST|`http://localhost:8080/login`|
 
   Example Request
-  ```
+  ```json
   {
       "email": "admin@stc.com",
       "password": "12345678"
   }
   ```
   Example Response : `accessToke` and `refreshToken` in cookie.
-  ```
+  ```json
   {
       "statusCode": 200,
       "message": "successfully"
@@ -224,7 +224,7 @@ stc-auth-service/
   |`/logout`|POST|`http://localhost:8080/logout`|
   
   Example Response : `accessToke` and `refreshToken` in black list (redis).
-  ```
+  ```json
   {
       "statusCode": 200,
       "message": "successfully"
@@ -242,13 +242,13 @@ stc-auth-service/
   |`/reset-password`|POST|`http://localhost:8080/reset-password`|
 
   Example Request
-  ```
+  ```json
   {
       "email": "myexample@gmail.com"
   }
   ```
   Example Response
-  ```
+  ```json
   {
       "statusCode": 200,
       "message": "successfully"
@@ -269,14 +269,14 @@ stc-auth-service/
   |`/change-password`|POST|`http://localhost:8080/change-password`|
 
   Example Request
-  ```
+  ```json
   {
       "oldPassword": "123456789"
       "newPassword": "987654321"
   }
   ```
   Example Response
-  ```
+  ```json
   {
       "statusCode": 200,
       "message": "successfully"
@@ -290,13 +290,13 @@ stc-auth-service/
   |`/change-password`|POST|`http://localhost:8080/change-password?token=xxxxxxxxxxxxx`|
 
   Example Request
-  ```
+  ```json
   {
       "newPassword": "987654321"
   }
   ```
   Example Response
-  ```
+  ```json
   {
       "statusCode": 200,
       "message": "successfully"
@@ -358,7 +358,7 @@ stc-auth-service/
   ```
   
   Example Response
-  ```
+  ```json
   {
       "count": 1302,
       "next": "https://pokeapi.co/api/v2/pokemon/?offset=20&limit=20",
