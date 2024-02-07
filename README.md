@@ -255,7 +255,7 @@ stc-auth-service/
   }
   ```
   <p align="center">
-    <img src="./other/blacklist.png">
+    <img src="./other/email.png">
   </p>
 </li>
 <li>
