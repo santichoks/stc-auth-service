@@ -37,7 +37,7 @@ func (m gatewayMiddleware) VerifyToken(c *fiber.Ctx) error {
 		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, err)
 	}
 	if err == nil {
-		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, errors.New("invalid accessToken token"))
+		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, errors.New("invalid access token"))
 	}
 
 	accessTokenClaims, err := jwtPkg.ParseToken(accessToken, m.cfg.Jwt.AccessTokenSecret)
@@ -53,7 +53,7 @@ func (m gatewayMiddleware) VerifyToken(c *fiber.Ctx) error {
 		}
 
 		if err == nil {
-			return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, errors.New("invalid refreshToken token"))
+			return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, errors.New("invalid refresh token"))
 		}
 
 		refreshTokenClaims, err := jwtPkg.ParseToken(refreshToken, m.cfg.Jwt.RefreshTokenSecret)

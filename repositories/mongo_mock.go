@@ -25,3 +25,9 @@ func (m *authMongoRepositoryMock) InsertOneUser(user models.User) (primitive.Obj
 
 	return args.Get(0).(primitive.ObjectID), args.Error(1)
 }
+
+func (m *authMongoRepositoryMock) UpdateOneUserPasswordByEmail(email string, hashedNewPassword string) error {
+	args := m.Called(email, hashedNewPassword)
+
+	return args.Error(0)
+}

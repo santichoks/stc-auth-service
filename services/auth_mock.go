@@ -31,3 +31,15 @@ func (m *authServiceMock) SignupSrv(req models.SignupReq, cfg *config.Config) (*
 
 	return args.Get(0).(*models.TokenRes), args.Error(1)
 }
+
+func (m *authServiceMock) ResetPasswordSrv(req models.ResetPasswordReq, cfg *config.Config) error {
+	args := m.Called(req, cfg)
+
+	return args.Error(0)
+}
+
+func (m *authServiceMock) ChangePasswordSrv(req models.ChangePasswordReq, resetPasswordToken string, accessToken string, cfg *config.Config) error {
+	args := m.Called(req, resetPasswordToken, accessToken, cfg)
+
+	return args.Error(0)
+}

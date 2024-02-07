@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/santichoks/stc-auth-service/models"
@@ -13,6 +14,7 @@ import (
 type AuthMongoRepository interface {
 	FindOneUserByEmail(email string) (*models.User, error)
 	InsertOneUser(user models.User) (primitive.ObjectID, error)
+	UpdateOneUserPasswordByEmail(email string, hashedNewPassword string) error
 }
 
 type authMongoRepository struct {
@@ -52,4 +54,22 @@ func (r authMongoRepository) InsertOneUser(user models.User) (primitive.ObjectID
 	}
 
 	return result.InsertedID.(primitive.ObjectID), nil
+}
+
+func (r authMongoRepository) UpdateOneUserPasswordByEmail(email string, hashedNewPassword string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "password", Value: hashedNewPassword}}}}
+
+	result, err := r.OpenCollection("users").UpdateOne(ctx, bson.D{{Key: "email", Value: email}}, update)
+	if err != nil {
+		return err
+	}
+
+	if result.ModifiedCount != 1 {
+		return errors.New("document not found or not updated")
+	}
+
+	return nil
 }

@@ -12,4 +12,6 @@ func AuthRoute(r *fiber.App, mdw middleware.GatewayMiddleware, ctrl controllers.
 	r.Post("/login", ctrl.LoginCtrl)
 	r.Post("/logout", ctrl.LogoutCtrl)
 	r.Post("/signup", ctrl.SignupCtrl)
+	r.Post("/reset-password", ctrl.ResetPasswordCtrl)
+	r.Post("/change-password", ctrl.ChangePasswordCtrl)
 }

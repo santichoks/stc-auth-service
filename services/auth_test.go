@@ -2,10 +2,12 @@ package services_test
 
 import (
 	"errors"
+	"os"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/santichoks/stc-auth-service/config"
 	"github.com/santichoks/stc-auth-service/models"
 	"github.com/santichoks/stc-auth-service/pkgs/jwtPkg"
@@ -535,6 +537,242 @@ func TestSignupSrv(t *testing.T) {
 		}
 
 		_, err := authSrv.SignupSrv(req, &config)
+
+		assert.Error(t, err)
+	})
+}
+
+func TestResetPasswordSrv(t *testing.T) {
+	t.Run("ResetPasswordSrv Successful", func(t *testing.T) {
+		godotenv.Load("../.env")
+		config := config.Config{
+			SmtpHost:                   os.Getenv("SMTP_HOST"),
+			SmtpPort:                   os.Getenv("SMTP_PORT"),
+			SenderEmail:                os.Getenv("SENDER_EMAIL"),
+			SenderPassword:             os.Getenv("SENDER_PASSWORD"),
+			ResetPasswordTokenDuration: 900,
+		}
+
+		authMongoRepo := repositories.NewAuthMongoRepositoryMock()
+		authRedisRepo := repositories.NewAuthRedisRepositoryMock()
+		authMongoRepo.On("FindOneUserByEmail", "santichok@stc.com").Return(&models.User{}, nil)
+		authRedisRepo.On("Set", mock.AnythingOfType("string"), "santichok@stc.com", time.Duration(config.ResetPasswordTokenDuration)*time.Second).Return(nil)
+
+		authSrv := services.NewAuthService(authMongoRepo, authRedisRepo)
+		err := authSrv.ResetPasswordSrv(models.ResetPasswordReq{Email: "santichok@stc.com"}, &config)
+
+		assert.Equal(t, nil, err)
+	})
+
+	t.Run("ResetPasswordSrv Send Email Failed", func(t *testing.T) {
+		config := config.Config{
+			ResetPasswordTokenDuration: 900,
+		}
+
+		authMongoRepo := repositories.NewAuthMongoRepositoryMock()
+		authRedisRepo := repositories.NewAuthRedisRepositoryMock()
+		authMongoRepo.On("FindOneUserByEmail", "santichok@stc.com").Return(&models.User{}, nil)
+		authRedisRepo.On("Set", mock.AnythingOfType("string"), "santichok@stc.com", time.Duration(config.ResetPasswordTokenDuration)*time.Second).Return(nil)
+
+		authSrv := services.NewAuthService(authMongoRepo, authRedisRepo)
+		err := authSrv.ResetPasswordSrv(models.ResetPasswordReq{Email: "santichok@stc.com"}, &config)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("ResetPasswordSrv Set Redis Failed", func(t *testing.T) {
+		config := config.Config{}
+
+		authMongoRepo := repositories.NewAuthMongoRepositoryMock()
+		authRedisRepo := repositories.NewAuthRedisRepositoryMock()
+		authMongoRepo.On("FindOneUserByEmail", "santichok@stc.com").Return(&models.User{}, nil)
+		authRedisRepo.On("Set", mock.AnythingOfType("string"), "santichok@stc.com", time.Duration(config.ResetPasswordTokenDuration)*time.Second).Return(errors.New(""))
+
+		authSrv := services.NewAuthService(authMongoRepo, authRedisRepo)
+		err := authSrv.ResetPasswordSrv(models.ResetPasswordReq{Email: "santichok@stc.com"}, &config)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("ResetPasswordSrv Invalid Email", func(t *testing.T) {
+		config := config.Config{}
+
+		authMongoRepo := repositories.NewAuthMongoRepositoryMock()
+		authRedisRepo := repositories.NewAuthRedisRepositoryMock()
+		authMongoRepo.On("FindOneUserByEmail", "santichok@stc.com").Return(&models.User{}, errors.New(""))
+		authRedisRepo.On("Set", mock.AnythingOfType("string"), "santichok@stc.com", time.Duration(config.ResetPasswordTokenDuration)*time.Second).Return(errors.New(""))
+
+		authSrv := services.NewAuthService(authMongoRepo, authRedisRepo)
+		err := authSrv.ResetPasswordSrv(models.ResetPasswordReq{Email: "santichok@stc.com"}, &config)
+
+		assert.Error(t, err)
+	})
+}
+
+func TestChangePasswordSrv(t *testing.T) {
+	t.Run("ChangePasswordSrv With Token Successful", func(t *testing.T) {
+		authMongoRepo := repositories.NewAuthMongoRepositoryMock()
+		authRedisRepo := repositories.NewAuthRedisRepositoryMock()
+		authMongoRepo.On("UpdateOneUserPasswordByEmail", "santichok@stc.com", mock.AnythingOfType("string")).Return(nil)
+		authRedisRepo.On("Get", "mockresetpasswordtoken").Return("santichok@stc.com", nil)
+
+		var deleteCount int64 = 1
+		authRedisRepo.On("Delete", []string{"mockresetpasswordtoken"}).Return(deleteCount, nil)
+
+		authSrv := services.NewAuthService(authMongoRepo, authRedisRepo)
+		err := authSrv.ChangePasswordSrv(models.ChangePasswordReq{}, "mockresetpasswordtoken", "mockaccesstoken", &config.Config{})
+
+		assert.Equal(t, nil, err)
+	})
+
+	t.Run("ChangePasswordSrv With Token Update Failed", func(t *testing.T) {
+		authMongoRepo := repositories.NewAuthMongoRepositoryMock()
+		authRedisRepo := repositories.NewAuthRedisRepositoryMock()
+		authMongoRepo.On("UpdateOneUserPasswordByEmail", "santichok@stc.com", mock.AnythingOfType("string")).Return(errors.New(""))
+		authRedisRepo.On("Get", "mockresetpasswordtoken").Return("santichok@stc.com", nil)
+
+		var deleteCount int64 = 1
+		authRedisRepo.On("Delete", []string{"mockresetpasswordtoken"}).Return(deleteCount, nil)
+
+		authSrv := services.NewAuthService(authMongoRepo, authRedisRepo)
+		err := authSrv.ChangePasswordSrv(models.ChangePasswordReq{}, "mockresetpasswordtoken", "mockaccesstoken", &config.Config{})
+
+		assert.Error(t, err)
+	})
+
+	t.Run("ChangePasswordSrv With Token Get Redis Failed", func(t *testing.T) {
+		authMongoRepo := repositories.NewAuthMongoRepositoryMock()
+		authRedisRepo := repositories.NewAuthRedisRepositoryMock()
+		authMongoRepo.On("UpdateOneUserPasswordByEmail", "santichok@stc.com", mock.AnythingOfType("string")).Return(errors.New(""))
+		authRedisRepo.On("Get", "mockresetpasswordtoken").Return("santichok@stc.com", errors.New(""))
+
+		var deleteCount int64 = 1
+		authRedisRepo.On("Delete", []string{"mockresetpasswordtoken"}).Return(deleteCount, nil)
+
+		authSrv := services.NewAuthService(authMongoRepo, authRedisRepo)
+		err := authSrv.ChangePasswordSrv(models.ChangePasswordReq{}, "mockresetpasswordtoken", "mockaccesstoken", &config.Config{})
+
+		assert.Error(t, err)
+	})
+
+	t.Run("ChangePasswordSrv With Old Password Successful", func(t *testing.T) {
+		token := jwtPkg.InitAccessToken("mocktokensecret", 100, &jwtPkg.MyClaims{Email: "santichok@stc.com"}).SignToken()
+		authMongoRepo := repositories.NewAuthMongoRepositoryMock()
+		authRedisRepo := repositories.NewAuthRedisRepositoryMock()
+		hashedOldPassword, _ := bcrypt.GenerateFromPassword([]byte("mockoldpassword"), bcrypt.DefaultCost)
+		authMongoRepo.On("FindOneUserByEmail", "santichok@stc.com").Return(&models.User{
+			Email:    "santichok@stc.com",
+			Password: string(hashedOldPassword),
+		}, nil)
+		authMongoRepo.On("UpdateOneUserPasswordByEmail", "santichok@stc.com", mock.AnythingOfType("string")).Return(nil)
+
+		authSrv := services.NewAuthService(authMongoRepo, authRedisRepo)
+		config := config.Config{
+			Jwt: config.Jwt{
+				AccessTokenSecret: "mocktokensecret",
+			},
+		}
+
+		req := models.ChangePasswordReq{
+			OldPassword: "mockoldpassword",
+			NewPassword: "mocknewpassword",
+		}
+		err := authSrv.ChangePasswordSrv(req, "", token, &config)
+
+		assert.Equal(t, nil, err)
+	})
+
+	t.Run("ChangePasswordSrv With Old Password Update Password Failed", func(t *testing.T) {
+		token := jwtPkg.InitAccessToken("mocktokensecret", 100, &jwtPkg.MyClaims{Email: "santichok@stc.com"}).SignToken()
+		authMongoRepo := repositories.NewAuthMongoRepositoryMock()
+		authRedisRepo := repositories.NewAuthRedisRepositoryMock()
+		hashedOldPassword, _ := bcrypt.GenerateFromPassword([]byte("mockoldpassword"), bcrypt.DefaultCost)
+		authMongoRepo.On("FindOneUserByEmail", "santichok@stc.com").Return(&models.User{
+			Email:    "santichok@stc.com",
+			Password: string(hashedOldPassword),
+		}, nil)
+		authMongoRepo.On("UpdateOneUserPasswordByEmail", "santichok@stc.com", mock.AnythingOfType("string")).Return(errors.New(""))
+
+		authSrv := services.NewAuthService(authMongoRepo, authRedisRepo)
+		config := config.Config{
+			Jwt: config.Jwt{
+				AccessTokenSecret: "mocktokensecret",
+			},
+		}
+
+		req := models.ChangePasswordReq{
+			OldPassword: "mockoldpassword",
+			NewPassword: "mocknewpassword",
+		}
+		err := authSrv.ChangePasswordSrv(req, "", token, &config)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("ChangePasswordSrv With Old Password Invalid Old Password", func(t *testing.T) {
+		token := jwtPkg.InitAccessToken("mocktokensecret", 100, &jwtPkg.MyClaims{Email: "santichok@stc.com"}).SignToken()
+		authMongoRepo := repositories.NewAuthMongoRepositoryMock()
+		authRedisRepo := repositories.NewAuthRedisRepositoryMock()
+		hashedOldPassword, _ := bcrypt.GenerateFromPassword([]byte("mockoldpassword"), bcrypt.DefaultCost)
+		authMongoRepo.On("FindOneUserByEmail", "santichok@stc.com").Return(&models.User{
+			Email:    "santichok@stc.com",
+			Password: string(hashedOldPassword),
+		}, nil)
+
+		authSrv := services.NewAuthService(authMongoRepo, authRedisRepo)
+		config := config.Config{
+			Jwt: config.Jwt{
+				AccessTokenSecret: "mocktokensecret",
+			},
+		}
+
+		req := models.ChangePasswordReq{
+			OldPassword: "xxxxxxxxxxxxxxx",
+			NewPassword: "mocknewpassword",
+		}
+		err := authSrv.ChangePasswordSrv(req, "", token, &config)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("ChangePasswordSrv With Old Password No Document", func(t *testing.T) {
+		token := jwtPkg.InitAccessToken("mocktokensecret", 100, &jwtPkg.MyClaims{Email: "santichok@stc.com"}).SignToken()
+		authMongoRepo := repositories.NewAuthMongoRepositoryMock()
+		authRedisRepo := repositories.NewAuthRedisRepositoryMock()
+		authMongoRepo.On("FindOneUserByEmail", "santichok@stc.com").Return(&models.User{}, errors.New(""))
+
+		authSrv := services.NewAuthService(authMongoRepo, authRedisRepo)
+		config := config.Config{
+			Jwt: config.Jwt{
+				AccessTokenSecret: "mocktokensecret",
+			},
+		}
+
+		req := models.ChangePasswordReq{
+			OldPassword: "xxxxxxxxxxxxxxx",
+			NewPassword: "mocknewpassword",
+		}
+		err := authSrv.ChangePasswordSrv(req, "", token, &config)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("ChangePasswordSrv With Old Parse Token Failed", func(t *testing.T) {
+		authMongoRepo := repositories.NewAuthMongoRepositoryMock()
+		authRedisRepo := repositories.NewAuthRedisRepositoryMock()
+
+		authSrv := services.NewAuthService(authMongoRepo, authRedisRepo)
+		config := config.Config{
+			Jwt: config.Jwt{
+				AccessTokenSecret: "mocktokensecret",
+			},
+		}
+
+		req := models.ChangePasswordReq{
+			OldPassword: "xxxxxxxxxxxxxxx",
+			NewPassword: "mocknewpassword",
+		}
+		err := authSrv.ChangePasswordSrv(req, "", "xxxxx", &config)
 
 		assert.Error(t, err)
 	})

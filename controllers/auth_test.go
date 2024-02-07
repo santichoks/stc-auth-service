@@ -263,3 +263,107 @@ func TestSignupCtrl(t *testing.T) {
 		assert.Equal(t, fiber.StatusBadRequest, res.StatusCode)
 	})
 }
+
+func TestResetPasswordCtrl(t *testing.T) {
+	body := models.ResetPasswordReq{
+		Email: "santichok@stc.com",
+	}
+
+	bodyJson, _ := json.Marshal(body)
+	t.Run("ResetPasswordCtrl Successful", func(t *testing.T) {
+		authSrv := services.NewAuthServiceMock()
+		authSrv.On("ResetPasswordSrv", body, &config.Config{}).Return(nil)
+
+		authCtrl := controllers.NewAuthController(authSrv, &config.Config{})
+		app := fiber.New()
+		app.Post("/reset-password", authCtrl.ResetPasswordCtrl)
+
+		req := httptest.NewRequest("POST", "/reset-password", bytes.NewReader(bodyJson))
+		req.Header.Set("Content-Type", "application/json")
+		res, _ := app.Test(req)
+
+		assert.Equal(t, fiber.StatusOK, res.StatusCode)
+	})
+
+	t.Run("ResetPasswordCtrl ResetPasswordSrv Failed", func(t *testing.T) {
+		authSrv := services.NewAuthServiceMock()
+		authSrv.On("ResetPasswordSrv", body, &config.Config{}).Return(errors.New(""))
+
+		authCtrl := controllers.NewAuthController(authSrv, &config.Config{})
+		app := fiber.New()
+		app.Post("/reset-password", authCtrl.ResetPasswordCtrl)
+
+		req := httptest.NewRequest("POST", "/reset-password", bytes.NewReader(bodyJson))
+		req.Header.Set("Content-Type", "application/json")
+		res, _ := app.Test(req)
+
+		assert.Equal(t, fiber.StatusBadRequest, res.StatusCode)
+	})
+	t.Run("ResetPasswordCtrl Parse Body Failed", func(t *testing.T) {
+		authSrv := services.NewAuthServiceMock()
+		authSrv.On("ResetPasswordSrv", body, &config.Config{}).Return(nil)
+
+		authCtrl := controllers.NewAuthController(authSrv, &config.Config{})
+		app := fiber.New()
+		app.Post("/reset-password", authCtrl.ResetPasswordCtrl)
+
+		req := httptest.NewRequest("POST", "/reset-password", nil)
+		req.Header.Set("Content-Type", "application/json")
+		res, _ := app.Test(req)
+
+		assert.Equal(t, fiber.StatusBadRequest, res.StatusCode)
+	})
+}
+
+func TestChangePasswordCtrl(t *testing.T) {
+	body := models.ChangePasswordReq{
+		OldPassword: "oldpassword",
+		NewPassword: "newpassword",
+	}
+
+	bodyJson, _ := json.Marshal(body)
+	t.Run("ChangePasswordCtrl Successful", func(t *testing.T) {
+		authSrv := services.NewAuthServiceMock()
+		authSrv.On("ChangePasswordSrv", body, "resetPasswordToken", "", &config.Config{}).Return(nil)
+
+		authCtrl := controllers.NewAuthController(authSrv, &config.Config{})
+		app := fiber.New()
+		app.Post("/change-password", authCtrl.ChangePasswordCtrl)
+
+		req := httptest.NewRequest("POST", "/change-password?token=resetPasswordToken", bytes.NewReader(bodyJson))
+		req.Header.Set("Content-Type", "application/json")
+		res, _ := app.Test(req)
+
+		assert.Equal(t, fiber.StatusOK, res.StatusCode)
+	})
+
+	t.Run("ChangePasswordCtrl ChangePasswordSrv Failed", func(t *testing.T) {
+		authSrv := services.NewAuthServiceMock()
+		authSrv.On("ChangePasswordSrv", body, "resetPasswordToken", "", &config.Config{}).Return(errors.New(""))
+
+		authCtrl := controllers.NewAuthController(authSrv, &config.Config{})
+		app := fiber.New()
+		app.Post("/change-password", authCtrl.ChangePasswordCtrl)
+
+		req := httptest.NewRequest("POST", "/change-password?token=resetPasswordToken", bytes.NewReader(bodyJson))
+		req.Header.Set("Content-Type", "application/json")
+		res, _ := app.Test(req)
+
+		assert.Equal(t, fiber.StatusUnauthorized, res.StatusCode)
+	})
+
+	t.Run("ChangePasswordCtrl Parse Body Failed", func(t *testing.T) {
+		authSrv := services.NewAuthServiceMock()
+		authSrv.On("ChangePasswordSrv", body, "resetPasswordToken", "", &config.Config{}).Return(nil)
+
+		authCtrl := controllers.NewAuthController(authSrv, &config.Config{})
+		app := fiber.New()
+		app.Post("/change-password", authCtrl.ChangePasswordCtrl)
+
+		req := httptest.NewRequest("POST", "/change-password?token=resetPasswordToken", nil)
+		req.Header.Set("Content-Type", "application/json")
+		res, _ := app.Test(req)
+
+		assert.Equal(t, fiber.StatusBadRequest, res.StatusCode)
+	})
+}

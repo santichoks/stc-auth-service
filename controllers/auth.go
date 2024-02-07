@@ -17,6 +17,8 @@ type AuthController interface {
 	LoginCtrl(*fiber.Ctx) error
 	LogoutCtrl(c *fiber.Ctx) error
 	SignupCtrl(*fiber.Ctx) error
+	ResetPasswordCtrl(*fiber.Ctx) error
+	ChangePasswordCtrl(*fiber.Ctx) error
 }
 
 type authController struct {
@@ -135,6 +137,37 @@ func (ctrl authController) SignupCtrl(c *fiber.Ctx) error {
 		SameSite: fiber.CookieSameSiteNoneMode,
 		// TO-DO must set an expiration date.
 	})
+
+	return responsePkg.SuccessResponse(c, fiber.StatusOK, "successfully")
+}
+
+func (ctrl authController) ResetPasswordCtrl(c *fiber.Ctx) error {
+	var req models.ResetPasswordReq
+	if err := c.BodyParser(&req); err != nil {
+		return responsePkg.ErrorResponse(c, fiber.StatusBadRequest, err)
+	}
+
+	err := ctrl.srv.ResetPasswordSrv(req, ctrl.cfg)
+	if err != nil {
+		return responsePkg.ErrorResponse(c, fiber.StatusBadRequest, err)
+	}
+
+	return responsePkg.SuccessResponse(c, fiber.StatusOK, "successfully")
+}
+
+func (ctrl authController) ChangePasswordCtrl(c *fiber.Ctx) error {
+	resetPasswordToken := c.Query("token")
+	accessToken := c.Cookies("accessToken")
+
+	var req models.ChangePasswordReq
+	if err := c.BodyParser(&req); err != nil {
+		return responsePkg.ErrorResponse(c, fiber.StatusBadRequest, err)
+	}
+
+	err := ctrl.srv.ChangePasswordSrv(req, resetPasswordToken, accessToken, ctrl.cfg)
+	if err != nil {
+		return responsePkg.ErrorResponse(c, fiber.StatusUnauthorized, err)
+	}
 
 	return responsePkg.SuccessResponse(c, fiber.StatusOK, "successfully")
 }

@@ -32,3 +32,12 @@ type TokenRes struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
 }
+
+type ResetPasswordReq struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+type ChangePasswordReq struct {
+	OldPassword string `json:"oldPassword" validate:"required,alphanum,min=8"`
+	NewPassword string `json:"newPassword" validate:"required,alphanum,min=8"`
+}
