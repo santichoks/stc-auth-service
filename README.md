@@ -77,7 +77,7 @@ stc-auth-service/
   For example
   ```env
   ACCESS_ORIGINS = http://localhost:3000
-  SERVICE_LISTS = [{ "host": "https://pokeapi.co", "alias": "/pokeapi" }]
+  SERVICE_LISTS = [{ "host": "https://pokeapi.co", "alias": "/pokeapi" }, ...]
   MONGO_HOST = mongodb://localhost:27017
   MONGO_USERNAME = root
   MONGO_PASSWORD = @123456
@@ -310,16 +310,20 @@ stc-auth-service/
 <li>
   <h4>Overview</h4>
   
-  The API Gateway is like a middleman between your users and different services. It's a central hub that helps send requests to different services using specific aliases. This makes it easier to keep service details hidden and lets you smoothly connect with many backend services.
+  The API Gateway is like a middleman between your users and different services. It's a central hub that helps send requests to different services using specific aliases. This makes it easier to keep service details hidden and lets you smoothly connect with many backend services. In this example, suppose that the target service is the [Pokémon API](https://pokeapi.co/).
 </li>
 <li>
   <h4>Configuration in .env file</h4>
   
   In your `.env` file, you can define a list of services with their corresponding hosts and aliases using the `SERVICE_LISTS` variable. Each service should be represented as a JSON object with `host` and `alias` keys.
 
-  ```
+  ```env
   SERVICE_LISTS=[{ "host": "https://pokeapi.co", "alias": "/pokeapi" }]
   ```
+
+  `host` : The base URL of the target service.
+  
+  `alias` : The alias used by the API Gateway to identify the target service.
 </li>
 <li>
   <h4>Request Structure</h4>
@@ -385,13 +389,18 @@ stc-auth-service/
 </li>
 <li>
   <h4>Internal Processing</h4>
-
-  <p>1. The API Gateway middleware first checks for authorization before processing the request.</p>
+  After authorization, the API Gateway utilizes the information provided in the `SERVICE_LISTS` environment variable to route requests.
   
-  <p>2. After authorization, the gateway constructs a request to the next service by removing "/gateway" and replacing the alias with the service-specific path.</p>
+  <p>1. Identifies the alias /pokeapi in the request path.</p>
   
-  <p>3. The final request sent to the PokeAPI service looks like this</p>
-
+  <p>2. Replaces the host portion with the corresponding host value from the environment variables.</p>
+  
+  <p>3. Removes the /gateway segment from the path.</p>
+  
+  <p>4. Adds the remaining path api/v2/pokemon/ to the modified host.</p>
+  
+  <p>5. Finally, forwards the request to the next service, resulting in the target URL:</p>
+  
   ```
   GET https://pokeapi.co/api/v2/pokemon
   ```
