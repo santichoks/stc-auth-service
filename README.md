@@ -389,6 +389,32 @@ stc-auth-service/
 </li>
 <li>
   <h4>Internal Processing</h4>
+  
+  ```mermaid
+  sequenceDiagram
+    participant C as Client
+    participant G as API Gateway
+    participant S as Service
+
+    rect rgb(204, 255, 204)
+    autonumber 1
+    C->>G: GET /gateway/pokeapi/api/v2/pokemon
+    note over C, G: Valid Access Token
+    G->>S: GET /api/v2/pokemon
+    note over G: Authorized
+    S->>G: 200 OK & JSON Response
+    G->>C: 200 OK & JSON Response
+    end
+
+    rect rgb(255, 153, 153)
+    autonumber 1
+    C->>G: GET /gateway/pokeapi/api/v2/pokemon
+    note over C, G: Invalid Access Token
+    G->>C: 401 Unauthorized
+    note over G: Unauthorized
+    end
+  ```
+
   After authorization, the API Gateway utilizes the information provided in the `SERVICE_LISTS` environment variable to route requests.
   
   <p>1. Identifies the alias /pokeapi in the request path.</p>
