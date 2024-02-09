@@ -427,6 +427,7 @@ stc-auth-service/
   
   <p>5. Finally, forwards the request to the next service, resulting in the target URL:</p>
   
+  
   ```
   GET https://pokeapi.co/api/v2/pokemon
   ```
