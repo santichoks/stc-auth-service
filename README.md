@@ -400,16 +400,30 @@ stc-auth-service/
     autonumber 1
     C->>G: GET /gateway/pokeapi/api/v2/pokemon
     note over C, G: Valid Access Token
+    note over C, G: Valid Refresh Token
     G->>S: GET /api/v2/pokemon
     note over G: Authorized
     S->>G: 200 OK & JSON Response
     G->>C: 200 OK & JSON Response
     end
 
+    rect rgb(204, 255, 204)
+    autonumber 1
+    C->>G: GET /gateway/pokeapi/api/v2/pokemon
+    note over C, G: Invalid Access Token
+    note over C, G: Valid Refresh Token
+    G->>S: GET /api/v2/pokemon
+    note over G: Generate New Access Token and Refresh Token
+    S->>G: 200 OK & JSON Response
+    G->>C: 200 OK & JSON Response
+    note over C, G: New Access and Refresh Tokens
+    end
+
     rect rgb(255, 153, 153)
     autonumber 1
     C->>G: GET /gateway/pokeapi/api/v2/pokemon
     note over C, G: Invalid Access Token
+    note over C, G: Invalid Refresh Token
     G->>C: 401 Unauthorized
     note over G: Unauthorized
     end
